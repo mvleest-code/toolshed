@@ -1,0 +1,18 @@
+{
+    "sourceFile": "device-registration.sh",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1725444651600,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1725444651600,
+            "name": "Commit-0",
+            "content": "#!/bin/bash\n\n# Variables\nWEBHOOK_URL=\"https://discord.com/api/webhooks/********\"\nSCRIPT_PATH=\"/usr/local/bin/send_ip_to_discord.sh\"\nSERVICE_PATH=\"/etc/systemd/system/ip-notify.service\"\nPATH_UNIT_PATH=\"/etc/systemd/system/ip-notify.path\"\n\n# Create the script to send IP addresses to Discord webhook\necho \"Creating the IP notification script...\"\ncat <<EOL > $SCRIPT_PATH\n#!/bin/bash\n\n# Discord webhook URL\nWEBHOOK_URL=\"$WEBHOOK_URL\"\n\n# Get the hostname of the device\nHOSTNAME=\\$(hostname)\n\n# Get internal IP addresses of all physical network interfaces (excluding virtual and loopback)\nIP_INTERNAL=\"\"\nfor iface in \\$(ls /sys/class/net); do\n    if [[ \\$(cat /sys/class/net/\\$iface/operstate) == \"up\" ]] && [[ ! \\$iface =~ ^(lo|docker|veth|br-|virbr|vmnet|vboxnet|tun|tap) ]]; then\n        IP_ADDR=\\$(ip -4 addr show \\$iface | grep -oP '(?<=inet\\s)\\d+(\\.\\d+){3}')\n        if [[ -n \\$IP_ADDR ]]; then\n            IP_INTERNAL+=\"Interface \\$iface: \\$IP_ADDR\\n\"\n        fi\n    fi\ndone\n\n# Get the external IP address\nIP_EXTERNAL=\\$(curl -s ifconfig.me)\n\n# Create the message to send\nMESSAGE=\"Hostname: \\$HOSTNAME\\nInternal IPs:\\n\\$IP_INTERNAL\\nExternal IP: \\$IP_EXTERNAL\"\n\n# Send the message to the Discord webhook\ncurl -H \"Content-Type: application/json\" -X POST -d \"{\\\"content\\\": \\\"\\$MESSAGE\\\"}\" \\$WEBHOOK_URL\nEOL\n\n# Make the script executable\nchmod +x $SCRIPT_PATH\n\n# Create a systemd service to run the script at boot\necho \"Creating systemd service...\"\ncat <<EOL > $SERVICE_PATH\n[Unit]\nDescription=Send IP addresses to Discord webhook on boot and network changes\nAfter=network-online.target\nWants=network-online.target\n\n[Service]\nType=simple\nExecStart=$SCRIPT_PATH\nExecStartPost=/usr/bin/systemctl restart ip-notify.path\n\n[Install]\nWantedBy=multi-user.target\nEOL\n\n# Create a systemd path unit to monitor network changes\necho \"Creating systemd path unit...\"\ncat <<EOL > $PATH_UNIT_PATH\n[Unit]\nDescription=Monitor network interface changes\n\n[Path]\nPathChanged=/etc/network/interfaces\nPathChanged=/run/systemd/network\n\n[Install]\nWantedBy=multi-user.target\nEOL\n\n# Reload systemd daemon to recognize the new service and path unit\necho \"Reloading systemd daemon...\"\nsystemctl daemon-reload\n\n# Enable and start the service and path unit\necho \"Enabling and starting services...\"\nsystemctl enable ip-notify.service\nsystemctl enable ip-notify.path\nsystemctl start ip-notify.service\nsystemctl start ip-notify.path\n\necho \"Setup complete. IP address notifications are now active.\"\n"
+        }
+    ]
+}
