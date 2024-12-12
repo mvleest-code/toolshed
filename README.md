@@ -1,6 +1,6 @@
-# mvleest-toolshed
+# toolshed
 
-Welcome to **mvleest-toolshed**, my personal collection of random tools that I use sometimes. This is not a polished repository—this is a shed, plain and simple.
+Welcome to my toolshed, my personal collection of random tools that I use sometimes. This is not a polished repository—this is a shed, plain and simple.
 
 ---
 
