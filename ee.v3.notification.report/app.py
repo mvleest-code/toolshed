@@ -16,10 +16,10 @@ logging.basicConfig(
 )
 
 # Configuration
-baseUrl = "api.c013.eagleeyenetworks.com"
-actorId = "101040eb"
+baseUrl = ""
+actorId = ""
 actorType = "camera"
-bridgeActorId = "100a28cd"
+bridgeActorId = ""
 actor = f"{actorType}:{actorId}"
 
 # Get access token from environment variable
