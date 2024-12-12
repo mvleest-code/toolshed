@@ -3,3 +3,4 @@
 .gitattributes
 .vscode
 LICENSE
+.DS_Store
